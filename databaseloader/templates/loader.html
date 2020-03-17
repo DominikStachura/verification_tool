@@ -1,0 +1,16 @@
+{% block content %}
+
+    <h2>Database manager</h2>
+    <div id="div1">
+        <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+            <input type="file" class="button" name="csv_file">
+            <button type="submit" class="button">Add file to database</button>
+        </form>
+    </div>
+
+    <div>
+    {{ df | safe }}
+    </div>
+
+{% endblock %}

@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+{% load static %}
+
+{% if exist %}
+    <img src="{% static dir %}" alt="Image {{dir}} not found"/>
+{% else %}
+    <h3>Region '{{country}}' is not defined in the database</h3>
+{% endif %}
+

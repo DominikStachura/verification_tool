@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+{% load static %}
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <title>Validator</title>
+    {% include "base.html" %}>
+
+    <!-- Custom styles for this template-->
+    <link href="{% static 'css/sb-admin-2.min.css' %}" rel="stylesheet">
+
+
+</head>
+<body>
+
+
+{% include "sidebar.html" %}
+
+
+{##}
+
+<img id='theImg' src='#' width="1280px" height="960px" style="position: absolute; bottom: 70px;left: 300px;">
+<canvas id='myCanvas' width='1280px' height='960px' style="position: absolute; bottom: 70px;left: 300px;"></canvas>
+
+
+<div id="nav-buttons" style="position: absolute; bottom: 10px;left: 575px; word-spacing: 5px;">
+    {#    <form action={% url "front:tables" %} method="post>#}
+    <input id='prev-btn' type='button' value='Previous' onclick='Previous()'/>
+    <input type="checkbox" id="Correct" name="Correct1" value="Correct" onclick='Print(Correct)'>
+    <label for="Correct"> Correct</label>
+    <input type="checkbox" id="Corrected" name="Corrected1" value="Corrected" onclick='Print(Corrected)'>
+    <label for="Corrected"> Corrected Property</label>
+    <input type="checkbox" id="Unreadable" name="Unreadable1" value="Unreadable" onclick='Print(Unreadable)'>
+    <label for="Unreadable"> Unreadable Photo</label>
+    <input type="checkbox" id="Unknown" name="Unknown1" value="Unknown" onclick='Print(Unknown)'>
+    <label for="Unknown"> Unknown</label>
+    <button id='update-btn' type='button'>Update Databse</button>
+    {#    </form>#}
+    <input id='next-btn' type='button' value='Next' onclick='Next()'/>
+    <text id='text'></text>
+    <text id='textimage'></text>
+
+    {#    <p id='type'>aaaaaa</p>#}
+</div>
+
+<div class='row' id="info" style="position: absolute; bottom: 988px;left: 1610px; word-spacing: 2px;">
+    <div class="col">
+        <text>Type:</text>
+    </div>
+    <div class="col">
+        <text id="type"></text>
+    </div>
+</div>
+
+<div class='row' id="info" style="position: absolute; bottom: 940px;left: 1610px; word-spacing: 2px;">
+    <div class="col">
+        <text>Shape:</text>
+    </div>
+    <div class="col">
+        <text id="shape"></text>
+    </div>
+</div>
+
+<div class='row' id="info" style="position: absolute; bottom: 910px;left: 1630px; word-spacing: 2px;">
+<select id="types_combo">
+{% for type in types %}
+    <option value="{{ type.sign_type }}">{{ type.sign_type }}</option>
+{% endfor %}
+</select>
+</div>
+
+<div class='row' id="info" style="position: absolute; bottom: 880px;left: 1630px; word-spacing: 2px;">
+<select id="shapes_combo">
+{% for shape in shapes %}
+    <option value="{{ shape.sign_shape }}">{{ shape.sign_shape }}</option>
+{% endfor %}
+</select>
+</div>
+<script>
+
+    var django_output = [];
+    var img_urls = [];
+    var signs_type = [];
+    var signs_shape = [];
+    var cords_table = [];
+    var textall = [];
+    var i = 0;
+
+    function Create_Url_table(url, sign_type, sign_shape) {
+        img_urls.push(url);
+        signs_type.push(sign_type);
+        signs_shape.push(sign_shape);
+    }
+
+    function Create_Cords_table(x1, y1, x2, y2) {
+        var cords = [Number(x1), Number(y1), Number(x2) - Number(x1), Number(y2) - Number(y1)];
+        cords_table.push(cords);
+    }
+
+
+    function print_elements() {
+        {#var textimage = document.getElementById("textimage");#}
+        for (i = 0; i < img_urls.length; i++) {
+            console.log(img_urls[i])
+        }
+    }
+
+    function Draw() {
+        var img = document.getElementById("theImg");
+        var cnvs = document.getElementById("myCanvas");
+
+        {#cnvs.style.position = "absolute";#}
+        {#cnvs.style.left = img.offsetLeft + "px";#}
+        {#cnvs.style.top = img.offsetTop + "px";#}
+
+        var ctx = cnvs.getContext("2d");
+        ctx.beginPath();
+        {#console.log(cords_table[i])#}
+        ctx.rect(cords_table[i][0], cords_table[i][1], cords_table[i][2], cords_table[i][3]);
+
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#00ff00';
+        ctx.stroke();
+
+    }
+
+
+    function Next() {
+        Update();
+        var cnvs = document.getElementById("myCanvas");
+        var context = cnvs.getContext('2d');
+        context.clearRect(0, 0, cnvs.width, cnvs.height);
+        var img = document.getElementById("theImg");
+        var type = document.getElementById("type");
+        var shape = document.getElementById("shape");
+        if (i < img_urls.length) {
+            i++;
+        } else {
+            i = 0;
+        }
+        img.src = img_urls[i];
+        type.innerHTML = signs_type[i];
+        shape.innerHTML = signs_shape[i];
+        Draw();
+
+
+    }
+
+
+
+    function Previous() {
+        Update();
+        var cnvs = document.getElementById("myCanvas");
+        var context = cnvs.getContext('2d');
+        context.clearRect(0, 0, cnvs.width, cnvs.height);
+        var img = document.getElementById("theImg");
+        var type = document.getElementById("type");
+        var shape = document.getElementById("shape");
+        if (i > 0) {
+            i--;
+        } else {
+            i = img_urls.length - 1;
+        }
+
+        img.src = img_urls[i];
+        type.innerHTML = signs_type[i];
+        shape.innerHTML = signs_shape[i];
+        Draw();
+
+
+    }
+
+    function Print(arg) {
+        // Get the checkbox
+        var checkBox = document.getElementById(arg.value);
+        // Get the output text
+        var text = document.getElementById("text");
+
+        // If the checkbox is checked, display the output text
+        if (checkBox.checked === true) {
+            textall.push(arg.value);
+            text.innerHTML = textall;
+        } else {
+            textall.splice(textall.indexOf(arg.value), 1);
+            text.innerHTML = textall;
+        }
+    }
+
+    function Update(reset=true) {
+        var text = document.getElementById("text");
+        var parameters = text.innerHTML;
+        var sign_type = document.getElementById("types_combo").value;
+        var sign_shape = document.getElementById("shapes_combo").value;
+        var output = [img_urls[i], parameters, sign_type, sign_shape];
+        django_output.push(output);
+
+        if(reset){
+            document.getElementById("Unreadable").checked = false;
+            document.getElementById("Correct").checked = false;
+            document.getElementById("Corrected").checked = false;
+            document.getElementById("Unknown").checked = false;
+            textall=[];
+            text.innerHTML = '';
+            document.getElementById("types_combo").selectedIndex = 0;
+            document.getElementById("shapes_combo").selectedIndex = 0;
+        }
+
+    }
+</script>
+{% for item in items %}
+    <script>Create_Url_table("{{ item.url_image }}", "{{ item.item_cat }}", "{{ item.item_shape }}");</script>
+    <script>Create_Cords_table("{{ item.x_1 }}", "{{ item.y_1 }}", "{{ item.x_2 }}", "{{ item.y_2 }}");
+    </script>
+{% endfor %}
+
+
+<script type="text/javascript"
+        src="{% static 'js/jquery-3.4.1.min.js' %}"></script>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("#update-btn").click(function () {
+            Update(false);
+            $.ajax({
+                url: "{% url "front:update" %}",
+                type: "POST",
+                dataType: "json",
+                data: {
+                    output: django_output,
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                {#success : function(json) {#}
+                {#    alert("Successfully sent the URL to Django");},#}
+                {#error : function(xhr,errmsg,err) {#}
+                {#    alert("Could not send URL to Django. Error: " + xhr.status + ": " + xhr.responseText);}#}
+            });
+        });
+    });
+</script>
+
+
+<script src="{% static 'vendor/jquery/jquery.min.js' %}"></script>
+
+<script src="{% static 'vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+
+<!-- Core plugin JavaScript-->
+<script src="{% static 'vendor/jquery-easing/jquery.easing.min.js' %}"></script>
+
+<!-- Custom scripts for all pages-->
+<script src="{% static 'js/sb-admin-2.min.js' %}"></script>
+
+<!-- Page level plugins -->
+<script src="{% static 'vendor/chart.js/Chart.min.js' %}"></script>
+
+<!-- Page level custom scripts -->
+<script src="{% static 'js/demo/chart-area-demo.js' %}"></script>
+<script src="{% static 'js/demo/chart-pie-demo.js' %} "></script>
+
+</body>
+</html>
