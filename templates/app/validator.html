@@ -63,20 +63,24 @@
 </div>
 
 <div class='row' id="info" style="position: absolute; bottom: 910px;left: 1630px; word-spacing: 2px;">
-<select id="types_combo">
-{% for type in types %}
-    <option value="{{ type.sign_type }}">{{ type.sign_type }}</option>
-{% endfor %}
-</select>
+    <select id="types_combo">
+        {% for type in types %}
+            <option value="{{ type.sign_type }}">{{ type.sign_type }}</option>
+        {% endfor %}
+    </select>
 </div>
 
 <div class='row' id="info" style="position: absolute; bottom: 880px;left: 1630px; word-spacing: 2px;">
-<select id="shapes_combo">
-{% for shape in shapes %}
-    <option value="{{ shape.sign_shape }}">{{ shape.sign_shape }}</option>
-{% endfor %}
-</select>
+    <select id="shapes_combo">
+        {% for shape in shapes %}
+            <option value="{{ shape.sign_shape }}">{{ shape.sign_shape }}</option>
+        {% endfor %}
+    </select>
 </div>
+
+<script type="text/javascript"
+        src="{% static 'js/jquery-3.4.1.min.js' %}"></script>
+
 <script>
 
     var django_output = [];
@@ -84,13 +88,33 @@
     var signs_type = [];
     var signs_shape = [];
     var cords_table = [];
+    var comments_table = [];
     var textall = [];
     var i = 0;
+    var checkboxes = ["Correct", "Unreadable", "Corrected", "Unknown"];
 
-    function Create_Url_table(url, sign_type, sign_shape) {
+    function ajax_post() {
+        $.ajax({
+            url: "{% url "front:update" %}",
+            type: "POST",
+            dataType: "json",
+            data: {
+                output: django_output,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            },
+            {#success : function(json) {#}
+            {#    alert("Successfully sent the URL to Django");},#}
+            {#error : function(xhr,errmsg,err) {#}
+            {#    alert("Could not send URL to Django. Error: " + xhr.status + ": " + xhr.responseText);}#}
+        });
+    }
+
+
+    function Create_Url_table(url, sign_type, sign_shape, comment) {
         img_urls.push(url);
         signs_type.push(sign_type);
         signs_shape.push(sign_shape);
+        comments_table.push(comment)
     }
 
     function Create_Cords_table(x1, y1, x2, y2) {
@@ -134,20 +158,22 @@
         var img = document.getElementById("theImg");
         var type = document.getElementById("type");
         var shape = document.getElementById("shape");
+        var text = document.getElementById("text");
         if (i < img_urls.length) {
             i++;
         } else {
             i = 0;
         }
+        Draw();
+        document.getElementById("types_combo").value = signs_type[i];
+        document.getElementById("shapes_combo").value = signs_shape[i];
         img.src = img_urls[i];
         type.innerHTML = signs_type[i];
         shape.innerHTML = signs_shape[i];
-        Draw();
-
+        text.innerHTML = comments_table[i];
+        document.getElementById(comments_table[i]).checked = true;
 
     }
-
-
 
     function Previous() {
         Update();
@@ -157,87 +183,73 @@
         var img = document.getElementById("theImg");
         var type = document.getElementById("type");
         var shape = document.getElementById("shape");
+        var text = document.getElementById("text");
         if (i > 0) {
             i--;
         } else {
             i = img_urls.length - 1;
         }
-
+        Draw();
+        document.getElementById("types_combo").value = signs_type[i];
+        document.getElementById("shapes_combo").value = signs_shape[i];
         img.src = img_urls[i];
         type.innerHTML = signs_type[i];
         shape.innerHTML = signs_shape[i];
-        Draw();
-
+        text.innerHTML = comments_table[i];
+        document.getElementById(comments_table[i]).checked = true;
 
     }
 
     function Print(arg) {
         // Get the checkbox
         var checkBox = document.getElementById(arg.value);
+        var checkBox_value = checkBox.checked;
+        // clear checkboxes
+        clear_checkboxes();
         // Get the output text
         var text = document.getElementById("text");
-
+        checkBox.checked = checkBox_value;
         // If the checkbox is checked, display the output text
         if (checkBox.checked === true) {
-            textall.push(arg.value);
-            text.innerHTML = textall;
+            text.innerHTML = arg.value;
         } else {
-            textall.splice(textall.indexOf(arg.value), 1);
-            text.innerHTML = textall;
+            text.innerHTML = '';
         }
     }
 
-    function Update(reset=true) {
+    function Update(reset = true) {
         var text = document.getElementById("text");
         var parameters = text.innerHTML;
+        if (parameters === '') {
+            parameters = checkboxes[0];
+        }
         var sign_type = document.getElementById("types_combo").value;
         var sign_shape = document.getElementById("shapes_combo").value;
-        var output = [img_urls[i], parameters, sign_type, sign_shape];
-        django_output.push(output);
+        django_output = [img_urls[i], parameters, sign_type, sign_shape];
+        comments_table[i] = parameters;
+        signs_shape[i] = sign_shape;
+        signs_type[i] = sign_type;
 
-        if(reset){
-            document.getElementById("Unreadable").checked = false;
-            document.getElementById("Correct").checked = false;
-            document.getElementById("Corrected").checked = false;
-            document.getElementById("Unknown").checked = false;
-            textall=[];
-            text.innerHTML = '';
-            document.getElementById("types_combo").selectedIndex = 0;
-            document.getElementById("shapes_combo").selectedIndex = 0;
+        if (reset) {
+            clear_checkboxes();
+            {#document.getElementById("types_combo").selectedIndex = 0;#}
+            {#document.getElementById("shapes_combo").selectedIndex = 0;#}
+            {#document.getElementById("types_combo").selectedIndex = 0;#}
+            {#document.getElementById("shapes_combo").selectedIndex = 0;#}
         }
-
+        ajax_post()
     }
+
+    function clear_checkboxes() {
+        checkboxes.forEach(value => document.getElementById(value).checked = false);
+    }
+
 </script>
 {% for item in items %}
-    <script>Create_Url_table("{{ item.url_image }}", "{{ item.item_cat }}", "{{ item.item_shape }}");</script>
+    <script>Create_Url_table("{{ item.url_image }}", "{{ item.item_cat }}", "{{ item.item_shape }}", "{{ item.comments }}");</script>
     <script>Create_Cords_table("{{ item.x_1 }}", "{{ item.y_1 }}", "{{ item.x_2 }}", "{{ item.y_2 }}");
     </script>
 {% endfor %}
-
-
-<script type="text/javascript"
-        src="{% static 'js/jquery-3.4.1.min.js' %}"></script>
-
-<script type="text/javascript">
-    $(document).ready(function () {
-        $("#update-btn").click(function () {
-            Update(false);
-            $.ajax({
-                url: "{% url "front:update" %}",
-                type: "POST",
-                dataType: "json",
-                data: {
-                    output: django_output,
-                    csrfmiddlewaretoken: '{{ csrf_token }}'
-                },
-                {#success : function(json) {#}
-                {#    alert("Successfully sent the URL to Django");},#}
-                {#error : function(xhr,errmsg,err) {#}
-                {#    alert("Could not send URL to Django. Error: " + xhr.status + ": " + xhr.responseText);}#}
-            });
-        });
-    });
-</script>
 
 
 <script src="{% static 'vendor/jquery/jquery.min.js' %}"></script>

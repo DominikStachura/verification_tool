@@ -89,20 +89,23 @@ def tables(request):
 
 def update(request):
     values = dict(request.POST)
-    for value in values.values():
-        if len(value) > 1:
-            url = value[0]
-            comment = value[1]
-            type = value[2]
-            shape = value[3]
-            instance = Item.objects.get_by_url(url=url)
-            instance.comments = comment
-            if type != 'None':
-                instance.item_cat = type
-            if shape != 'None':
-                instance.item_shape = shape
-            instance.save()
+    params = list(values.values())[0]
+    if len(params) == 4:
+        url = params[0]
+        comment = params[1]
+        type = params[2]
+        shape = params[3]
+        instance = Item.objects.get_by_url(url=url)
+        instance.comments = comment
+        if type != 'None':
+            instance.item_cat = type
+        if shape != 'None':
+            instance.item_shape = shape
+        instance.save()
+    return render(request, 'app/index.html')
 
+
+def generate_csv(request):
     fields = Item._meta.fields
     with open('output.csv', 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
@@ -110,8 +113,9 @@ def update(request):
         writer.writerow([str(field).split('.')[2] for field in fields])
         for obj in Item.objects.all():
             writer.writerow([getattr(obj, field.name) for field in fields])
-
     return render(request, 'app/index.html')
+
+
 
 
 def _get_list_images():
