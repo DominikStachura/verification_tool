@@ -19,8 +19,8 @@
 
 
 {##}
-
-<img id='theImg' src='#' width="1280px" height="960px" style="position: absolute; bottom: 70px;left: 300px;">
+<img id='theImg' src='#' width="1280px" height="960px" style="position: absolute; bottom: 70px;left: 300px;"
+     alt="Frame not found on the server">
 <canvas id='myCanvas' width='1280px' height='960px' style="position: absolute; bottom: 70px;left: 300px;"></canvas>
 
 
@@ -38,7 +38,7 @@
     <button id='update-btn' type='button'>Update Databse</button>
     {#    </form>#}
     <input id='next-btn' type='button' value='Next' onclick='Next()'/>
-    <text id='text'></text>
+
     <text id='textimage'></text>
 
     {#    <p id='type'>aaaaaa</p>#}
@@ -62,10 +62,19 @@
     </div>
 </div>
 
+<script>
+    var icons = {};
+
+    function Create_Icons_Dict(type, icon) {
+        icons[type] = icon;
+    }
+</script>
+
 <div class='row' id="info" style="position: absolute; bottom: 910px;left: 1630px; word-spacing: 2px;">
-    <select id="types_combo">
-        {% for type in types %}
+    <select id="types_combo" onchange="change_icon()">
+        {% for type, icon in types %}
             <option value="{{ type.sign_type }}">{{ type.sign_type }}</option>
+            <script>Create_Icons_Dict("{{ type.sign_type }}", "{{ icon.sign_icon }}");</script>
         {% endfor %}
     </select>
 </div>
@@ -78,11 +87,23 @@
     </select>
 </div>
 
+<div class='row' id="info" style="position: absolute; bottom: 850px;left: 1610px; word-spacing: 2px;">
+    <div class="col">
+        <text>Status:</text>
+    </div>
+    <div class="col">
+        <text id='text'></text>
+    </div>
+</div>
+
+<div class='row' id="info" style="position: absolute; bottom: 845px;left: 1790px;">
+    <div class="col">
+        <img id='icon' src='#' alt="not found" width="64px" height="64px">
+    </div>
+</div>
 <script type="text/javascript"
         src="{% static 'js/jquery-3.4.1.min.js' %}"></script>
-
 <script>
-
     var django_output = [];
     var img_urls = [];
     var signs_type = [];
@@ -90,8 +111,9 @@
     var cords_table = [];
     var comments_table = [];
     var textall = [];
-    var i = 0;
+    var i = 1;
     var checkboxes = ["Correct", "Unreadable", "Corrected", "Unknown"];
+    {#var icons = {};#}
 
     function ajax_post() {
         $.ajax({
@@ -114,13 +136,17 @@
         img_urls.push(url);
         signs_type.push(sign_type);
         signs_shape.push(sign_shape);
-        comments_table.push(comment)
+        comments_table.push(comment);
     }
 
     function Create_Cords_table(x1, y1, x2, y2) {
         var cords = [Number(x1), Number(y1), Number(x2) - Number(x1), Number(y2) - Number(y1)];
         cords_table.push(cords);
     }
+
+    {#function Create_Icons_Dict(type, icon) {#}
+    {#    console.log(type);#}
+    {#    icons[type] = icon;}#}
 
 
     function print_elements() {
@@ -159,6 +185,7 @@
         var type = document.getElementById("type");
         var shape = document.getElementById("shape");
         var text = document.getElementById("text");
+        var icon = document.getElementById("icon");
         if (i < img_urls.length) {
             i++;
         } else {
@@ -171,8 +198,10 @@
         type.innerHTML = signs_type[i];
         shape.innerHTML = signs_shape[i];
         text.innerHTML = comments_table[i];
-        document.getElementById(comments_table[i]).checked = true;
-
+        icon.src = 'data:image/png;base64,' + icons[signs_type[i]];
+        if (comments_table[i] !== null) {
+            document.getElementById(comments_table[i]).checked = true;
+        }
     }
 
     function Previous() {
@@ -184,6 +213,7 @@
         var type = document.getElementById("type");
         var shape = document.getElementById("shape");
         var text = document.getElementById("text");
+        var icon = document.getElementById("icon");
         if (i > 0) {
             i--;
         } else {
@@ -196,8 +226,10 @@
         type.innerHTML = signs_type[i];
         shape.innerHTML = signs_shape[i];
         text.innerHTML = comments_table[i];
-        document.getElementById(comments_table[i]).checked = true;
-
+        icon.src = 'data:image/png;base64,' + icons[signs_type[i]];
+        if (comments_table[i] !== null) {
+            document.getElementById(comments_table[i]).checked = true;
+        }
     }
 
     function Print(arg) {
@@ -244,12 +276,22 @@
         checkboxes.forEach(value => document.getElementById(value).checked = false);
     }
 
+    function change_icon() {
+        var icon = document.getElementById("icon");
+        icon.src = 'data:image/png;base64,' + icons[document.getElementById("types_combo").value];
+    }
+
 </script>
+{#{% for type, icon in types %}#}
+{#    <script>Create_Icons_Dict("{{ type.sign_type }}", "{{ icon.sign_icon }}");</script>#}
+{#{% endfor %}#}
+
 {% for item in items %}
     <script>Create_Url_table("{{ item.url_image }}", "{{ item.item_cat }}", "{{ item.item_shape }}", "{{ item.comments }}");</script>
-    <script>Create_Cords_table("{{ item.x_1 }}", "{{ item.y_1 }}", "{{ item.x_2 }}", "{{ item.y_2 }}");
-    </script>
+    <script>Create_Cords_table("{{ item.x_1 }}", "{{ item.y_1 }}", "{{ item.x_2 }}", "{{ item.y_2 }}");</script>
 {% endfor %}
+
+<script>Next();</script>
 
 
 <script src="{% static 'vendor/jquery/jquery.min.js' %}"></script>

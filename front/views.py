@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from databaseloader.models import Item, ImageItem, SignType, SignShape
+from databaseloader.models import Item, ImageItem, SignType, SignShape, SignIcon
 from databaseloader.utils import get_type_and_shape
 from pathlib import Path
 
@@ -58,13 +58,17 @@ def index(request):
 
             temp_obj.save()
 
-        sign_types, sign_shapes = get_type_and_shape()
+        sign_types, sign_shapes, sign_icons = get_type_and_shape()
         for sign_type in sign_types:
             SignType(sign_type=sign_type).save()
 
         SignShape(sign_shape='None').save()
         for sign_shape in sign_shapes:
             SignShape(sign_shape=sign_shape).save()
+
+        for sign_icon in sign_icons:
+            SignIcon(sign_icon=sign_icon).save()
+
 
     return render(request, 'app/index.html')
 
@@ -75,6 +79,8 @@ def validator(request):
     items = Item.objects.all()
     types = SignType.objects.all()
     shapes = SignShape.objects.all()
+    icons = SignIcon.objects.all()
+    types = zip(types, icons)
     return render(request, 'app/validator.html', context={'items': items,
                                                           'types': types,
                                                           'shapes': shapes})

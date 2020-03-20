@@ -47,6 +47,8 @@ class ImageItem(models.Model):
 class SignType(models.Model):
     sign_type = models.TextField(default='')
 
-
 class SignShape(models.Model):
     sign_shape = models.TextField(default='')
+
+class SignIcon(models.Model):
+    sign_icon = models.TextField(default='')
